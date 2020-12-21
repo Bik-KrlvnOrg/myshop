@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+  zookeeper:
+    container_name: zookeeper
+    image: bitnami/zookeeper:3.6.2
+    ports:
+      - '2181:2181'
+    networks:
+      - kafka
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+
+  kafka:
+    image: bitnami/kafka:2.6.0
+    container_name: kafka
+    ports:
+      - '9092:9092'
+    networks:
+      - kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+
+  shop-discovery:
+    container_name: "shop-discovery"
+    build:
+      context: ./shop_discovery/
+    networks:
+      - shop-customer
+      - shop-discovery
+    ports:
+      - 8761:8761
+
+
+  shop-customer:
+    container_name: "shop-customer"
+    build:
+      context: ./customer-svc/
+    networks:
+      - kafka
+      - shop-discovery
+      - shop-customer
+    ports:
+      - 5750:5750
+    depends_on:
+      - customer-db
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://customer-db/customer_svc"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_SERVER: "kafka:9092"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://shop-discovery:8761/eureka/"
+
+  customer-db:
+    container_name: "customer_db"
+    image: postgres:9.6
+    networks:
+      - shop-customer
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: customer_svc
+
+networks:
+  shop-discovery:
+  shop-customer:
+  kafka:
