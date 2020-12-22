@@ -33,6 +33,7 @@ services:
     build:
       context: ./shop_discovery/
     networks:
+      - shop-product
       - shop-customer
       - shop-discovery
     ports:
@@ -64,14 +65,46 @@ services:
     image: postgres:9.6
     networks:
       - shop-customer
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: customer_svc
 
+
+  shop-product:
+    container_name: "shop-product"
+    build:
+      context: ./product-svc/
+    ports:
+      - 5760:5760
+    networks:
+      - shop-discovery
+      - shop-product
+    depends_on:
+      - product-db
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://product-db/product_svc"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://shop-discovery:8761/eureka/"
+
+  product-db:
+    container_name: "product_db"
+    image: postgres:9.6
+    networks:
+      - shop-product
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: product_svc
+
+
 networks:
   shop-discovery:
   shop-customer:
+  shop-product:
   kafka:

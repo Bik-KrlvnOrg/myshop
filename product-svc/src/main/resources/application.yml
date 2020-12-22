@@ -1,0 +1,19 @@
+server:
+  port: 5760
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product_svc
+    #    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    #    driver-class-name: org.h2.Driver
+    username: postgres
+    password: postgres
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  application:
+    name: product-svc
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
