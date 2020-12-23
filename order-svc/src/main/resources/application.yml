@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: order-svc
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order_svc
+    username: postgres
+    password: postgres
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 5770
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: "http://localhost:8761/eureka/"

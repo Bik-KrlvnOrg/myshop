@@ -33,6 +33,7 @@ services:
     build:
       context: ./shop_discovery/
     networks:
+      - shop-order
       - shop-product
       - shop-customer
       - shop-discovery
@@ -103,8 +104,41 @@ services:
       POSTGRES_DB: product_svc
 
 
+  shop-order:
+    container_name: "shop-order"
+    build:
+      context: ./order-svc/
+    ports:
+      - 5770:5770
+    networks:
+      - kafka
+      - shop-discovery
+      - shop-order
+    depends_on:
+      - order-db
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://order-db/order_svc"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_SERVER: "kafka:9092"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://shop-discovery:8761/eureka/"
+
+  order-db:
+    container_name: "order_db"
+    image: postgres:9.6
+    networks:
+      - shop-order
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: order_svc
+
 networks:
   shop-discovery:
   shop-customer:
   shop-product:
+  shop-order:
   kafka:
